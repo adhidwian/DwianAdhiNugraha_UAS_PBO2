@@ -25,6 +25,11 @@ public class LoginFrame extends JFrame{
                 if (rs.next()){
                     Preferences pref = Preferences.userRoot().node(Main.class.getName());
                     pref.put("USER_ID","1");
+                    rs.getInt("id");
+                    rs.getString("nm_user");
+                    rs.getString("username");
+                    rs.getString("password");
+
                     DataUsahaViewFrame duvf = new DataUsahaViewFrame();
                     duvf.setVisible(true);
                     dispose();

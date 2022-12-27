@@ -1,58 +1,39 @@
 package frame;
 
-import com.sun.tools.javac.Main;
 import helpers.Koneksi;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-import java.awt.event.ContainerEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.*;
-import java.util.prefs.Preferences;
 
-public class DataUsahaViewFrame extends JFrame {
-
+public class DataUserView extends JFrame{
     private JPanel mainPanel;
     private JTextField cariTextField;
     private JButton cariButton;
     private JTable viewTable;
-    private JPanel buttonPanel;
-    private JScrollPane viewScrollPane;
-    private JPanel cariPanel;
     private JButton tambahButton;
     private JButton ubahButton;
     private JButton hapusButton;
     private JButton batalButton;
     private JButton tutupButton;
-    private JButton keluarButton;
-    private JButton dataUserButton;
-    private JPanel buttonAdminPanel;
-    private JLabel lbNamaUser;
+    private JPanel cariPanel;
+    private JScrollPane viewScrollPane;
+    private JPanel buttonPanel;
 
-    public BufferedImage getBufferedImage(Blob imageBlob){
-        InputStream binaryStream = null;
-        BufferedImage b = null;
-        try {
-            binaryStream = imageBlob.getBinaryStream();
-            b = ImageIO.read(binaryStream);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return b;
-    }
-    public DataUsahaViewFrame(){
-
+    public DataUserView(){
         tambahButton.addActionListener(e -> {
-            DataUsahaInputFrame inputFrame = new DataUsahaInputFrame();
-            inputFrame.setVisible(true);
+            DataUserInput dui = new DataUserInput();
+            dui.setVisible(true);
+        });
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowActivated(WindowEvent e) {
+                isiTable();
+            }
         });
 
         ubahButton.addActionListener(e -> {
@@ -63,17 +44,10 @@ public class DataUsahaViewFrame extends JFrame {
             }
             TableModel tm = viewTable.getModel();
             int id = Integer.parseInt(tm.getValueAt(barisTerpilih,0).toString());
-            DataUsahaInputFrame inputFrame = new DataUsahaInputFrame();
+            DataUserInput inputFrame = new DataUserInput();
             inputFrame.setId(id);
             inputFrame.isiKomponen();
             inputFrame.setVisible(true);
-        });
-
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowActivated(WindowEvent e) {
-                isiTable();
-            }
         });
 
         cariButton.addActionListener(e -> {
@@ -87,23 +61,20 @@ public class DataUsahaViewFrame extends JFrame {
             }
             Connection c = Koneksi.getConnection();
             String keyword = "%" + cariTextField.getText() + "%";
-            String searchSQL = "SELECT * FROM data_usaha WHERE nm_pelaku_usaha like ?";
+            String searchSQL = "SELECT * FROM user_usaha WHERE nm_user like ?";
             try {
                 PreparedStatement ps = c.prepareStatement(searchSQL);
                 ps.setString(1, keyword);
                 ResultSet rs = ps.executeQuery();
                 DefaultTableModel dtm = (DefaultTableModel) viewTable.getModel();
                 dtm.setRowCount(0);
-                Object[] row = new Object[5];
+                Object[] row = new Object[4];
                 while (rs.next()) {
-                    Icon icon = new ImageIcon(getBufferedImage(rs.getBlob("logo_usaha")));
-
 
                     row[0] = rs.getInt("id");
-                    row[1] = rs.getString("nm_pelaku_usaha");
-                    row[2] = rs.getString("nm_usaha");
-                    row[3] = rs.getString("alamat_usaha");
-                    row[4] = icon;
+                    row[1] = rs.getString("nm_user");
+                    row[2] = rs.getString("username");
+                    row[3] = rs.getString("password");
                     dtm.addRow(row);
                 }
             } catch (SQLException ex){
@@ -126,7 +97,7 @@ public class DataUsahaViewFrame extends JFrame {
                 TableModel tm = viewTable.getModel();
                 int id = Integer.parseInt(tm.getValueAt(barisTerpilih,0).toString());
                 Connection c = Koneksi.getConnection();
-                String deleteSQL = "DELETE FROM data_usaha WHERE id = ?";
+                String deleteSQL = "DELETE FROM user_usaha WHERE id = ?";
                 try {
                     PreparedStatement ps = c.prepareStatement(deleteSQL);
                     ps.setInt(1, id);
@@ -146,61 +117,40 @@ public class DataUsahaViewFrame extends JFrame {
             isiTable();
         });
 
-        keluarButton.addActionListener(e -> {
-            Preferences pref = Preferences.userRoot().node(Main.class.getName());
-            pref.put("USER_ID","");
-            dispose();
-            LoginFrame lf = new LoginFrame();
-            lf.setVisible(true);
-            lf.setSize(320,200);
-            lf.setLocationRelativeTo(null);
-        });
 
-        dataUserButton.addActionListener(e -> {
-            DataUserView duv = new DataUserView();
-            duv.setVisible(true);
-            duv.setLocationRelativeTo(null);
-        });
 
 
         init();
         isiTable();
     }
 
-    private void init(){
+
+
+    public void init(){
         setContentPane(mainPanel);
-        setTitle("Data Usaha");
+        setTitle("Data User");
         pack();
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
     }
 
-
     public void isiTable(){
         Connection c = Koneksi.getConnection();
-        String selectSQL = "SELECT * FROM data_usaha";
+        String selectSQL = "SELECT * FROM user_usaha";
         try {
             Statement s = c.createStatement();
             ResultSet rs = s.executeQuery(selectSQL);
-            String header[] = {"Id", "Nama Pelaku Usaha","Nama Usaha", "Alamat Usaha", "Logo Usaha"};
-            DefaultTableModel dtm = new DefaultTableModel(header, 0){
-                public Class getColumnClass(int column)
-                {
-                    return getValueAt(0, column).getClass();
-                }
-            };
+            String header[] = {"Id", "Nama User","Username", "Password"};
+            DefaultTableModel dtm = new DefaultTableModel(header, 0);
             viewTable.setModel(dtm);
             viewTable.setPreferredScrollableViewportSize(viewTable.getPreferredSize());
             viewTable.setRowHeight(200);
-            Object[] row = new Object[5];
+            Object[] row = new Object[4];
             while (rs.next()){
-                Icon icon = new ImageIcon(getBufferedImage(rs.getBlob("logo_usaha")));
-
                 row[0] = rs.getInt("id");
-                row[1] = rs.getString("nm_pelaku_usaha");
-                row[2] = rs.getString("nm_usaha");
-                row[3] = rs.getString("alamat_usaha");
-                row[4] = icon;
+                row[1] = rs.getString("nm_user");
+                row[2] = rs.getString("username");
+                row[3] = rs.getString("password");
                 dtm.addRow(row);
             }
         } catch (SQLException e){

@@ -68,9 +68,7 @@ public class DataUsahaInputFrame extends JFrame {
         });
 
         pilihLogoButton.addActionListener(e -> {
-            String nm_pelaku_usaha = namapuTextField.getText();
-            String nm_usaha = namauTextField.getText();
-            String alamat_usaha = alamatTextField.getText();
+
 
             JFileChooser jfile = new JFileChooser();
             jfile.setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -96,20 +94,54 @@ public class DataUsahaInputFrame extends JFrame {
                     lbGambar.setIcon(image);
 
                     simpanButton.addActionListener(e1 -> {
+                        String nm_pelaku_usaha = namapuTextField.getText();
+                        String nm_usaha = namauTextField.getText();
+                        String alamat_usaha = alamatTextField.getText();
                         FileInputStream fis = null;
+                        Connection c = Koneksi.getConnection();
 
 
+                        PreparedStatement pst;
                         try {
-                            Connection c = Koneksi.getConnection();
-                            fis = new FileInputStream(path);
-                            PreparedStatement pst = c.prepareStatement("INSERT INTO data_usaha (id, nm_pelaku_usaha, nm_usaha, alamat_usaha, logo_usaha) " +
-                                    "VALUES (NULL, ?, ?, ?, ?)");
-                            pst.setString(1, nm_pelaku_usaha);
-                            pst.setString(2, nm_usaha);
-                            pst.setString(3, alamat_usaha);
-                            pst.setBinaryStream(4, fis);
-                            pst.executeUpdate();
-                            dispose();
+                            if (id == 0) {
+                                fis = new FileInputStream(path);
+                                String cekSQL = "SELECT * FROM data_usaha WHERE nm_pelaku_usaha = ?";
+                                pst = c.prepareStatement(cekSQL);
+                                pst.setString(1, nm_pelaku_usaha);
+                                ResultSet rs = pst.executeQuery();
+                                if (rs.next()) {
+                                    JOptionPane.showMessageDialog(null, "Data Sama Sudah Ada!");
+                                } else {
+                                    String insertSQL = "INSERT INTO data_usaha (id, nm_pelaku_usaha, nm_usaha, alamat_usaha, logo_usaha)" + "VALUES (NULL, ?, ?, ?, ?)";
+                                    pst = c.prepareStatement(insertSQL);
+                                    pst.setString(1, nm_pelaku_usaha);
+                                    pst.setString(2, nm_usaha);
+                                    pst.setString(3, alamat_usaha);
+                                    pst.setBinaryStream(4, fis);
+                                    pst.executeUpdate();
+                                    dispose();
+                                }
+                            } else {
+                                String cekSQL = "SELECT * FROM data_usaha WHERE nm_pelaku_usaha = ? AND id!=?";
+                                pst = c.prepareStatement(cekSQL);
+                                pst.setString(1, nm_pelaku_usaha);
+                                pst.setInt(2,id);
+                                ResultSet rs = pst.executeQuery();
+                                if (rs.next()){
+                                    JOptionPane.showMessageDialog(null,"Data Sama Sudah Ada!");
+                                } else{
+                                    fis = new FileInputStream(path);
+                                    String updateSQL = "UPDATE data_usaha SET nm_pelaku_usaha = ?, nm_usaha = ?, alamat_usaha = ?, logo_usaha = ? WHERE id = ?";
+                                    pst = c.prepareStatement(updateSQL);
+                                    pst.setString(1, nm_pelaku_usaha);
+                                    pst.setString(2, nm_usaha);
+                                    pst.setString(3, alamat_usaha);
+                                    pst.setBinaryStream(4, fis);
+                                    pst.setInt(5,id);
+                                    pst.executeUpdate();
+                                    dispose();
+                                }
+                            }
 
                         } catch (Exception ex) {
                             System.out.println("" + ex);

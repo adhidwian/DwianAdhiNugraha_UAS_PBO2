@@ -12,11 +12,11 @@ public class SplashFrame extends JFrame{
 
     public SplashFrame() {
         setContentPane(mainPanel);
-        setSize(438,438);
+        setSize(445,475);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
-        lbSplash.setIcon(new ImageIcon("C:\\Users\\dwian\\IdeaProjects\\dwian_usaha\\splash.jpg"));
+        lbSplash.setIcon(new ImageIcon("C:\\Users\\dwian\\IdeaProjects\\dwian_usaha\\splash_logo.png"));
 
 
 
@@ -25,7 +25,7 @@ public class SplashFrame extends JFrame{
         System.out.println(userID);
 
         try {
-            TimeUnit.SECONDS.sleep(2);
+            TimeUnit.SECONDS.sleep(1);
             dispose();
             if(userID.equals("")){
                 setVisible(false);
